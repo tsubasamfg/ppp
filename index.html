@@ -7,15 +7,15 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Hide Number Input Spinner for A2Input */
-        #A2Input::-webkit-outer-spin-button,
+        /* A2Input要素がHTMLから削除されるため、これらのスタイルは不要になります。 */
+        /* #A2Input::-webkit-outer-spin-button,
         #A2Input::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
         #A2Input {
             -moz-appearance: textfield;
-        }
+        } */
         /* Custom styles for responsiveness and appearance */
         body {
             font-family: 'Inter', sans-serif; /* Use Inter font for consistency with Tailwind */
@@ -43,12 +43,7 @@
                 <input type="number" id="PosterInput" value="5"
                        class="mt-1 block w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-lg">
             </div>
-
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                <label for="A2Input" class="text-gray-700 text-base sm:text-lg mb-1 sm:mb-0">A2用紙の横幅（cm）:</label>
-                <input type="number" id="A2Input" value="42" readonly
-                       class="mt-1 block w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 cursor-not-allowed sm:text-lg">
-            </div>
+            <!-- 「A2用紙の横幅（cm）:」の表示と入力フォームは画面から削除されました -->
         </div>
 
         <button id="calculateButton"
@@ -89,26 +84,26 @@
         function updateCalculationDisplay() {
             const wallInput = document.getElementById("WallInput");
             const posterInput = document.getElementById("PosterInput");
-            const a2Input = document.getElementById("A2Input");
+            // const a2Input = document.getElementById("A2Input"); // HTMLから削除されたため、この行は不要になります
             const result1Span = document.getElementById("result1");
             const result2Span = document.getElementById("result2");
             const errorMessageDiv = document.getElementById("errorMessage");
 
             const wallValue = parseFloat(wallInput.value);
             const posterValue = parseFloat(posterInput.value);
-            const a2Value = parseFloat(a2Input.value);
+            const a2Value = 42; // A2用紙の横幅を固定値として設定
 
             // Hide error message initially
             errorMessageDiv.classList.add("hidden");
             posterInput.classList.remove("error-input"); // Remove error highlighting from previous calculations
 
             // Validate inputs
-            if (isNaN(wallValue) || isNaN(posterValue) || isNaN(a2Value) || wallValue < 0 || posterValue < 1 || a2Value < 0) {
+            // a2Valueは固定値になったため、そのNaNチェックや負の値チェックは不要
+            if (isNaN(wallValue) || isNaN(posterValue) || wallValue < 0 || posterValue < 1) {
                 result1Span.textContent = "N/A";
                 result2Span.textContent = "N/A";
                 errorMessageDiv.textContent = "有効な数値を入力してください。";
                 errorMessageDiv.classList.remove("hidden");
-                // Do not highlight poster input for general validation error
                 return;
             }
 
@@ -128,6 +123,11 @@
 
         // Event listener for the calculate button
         document.getElementById("calculateButton").addEventListener("click", updateCalculationDisplay);
+
+        // Add event listeners for input changes
+        document.getElementById("WallInput").addEventListener("input", updateCalculationDisplay);
+        document.getElementById("PosterInput").addEventListener("input", updateCalculationDisplay);
+        // A2InputはHTMLから削除されたため、このイベントリスナーは不要です。
 
         // Initial calculation on page load
         window.onload = updateCalculationDisplay;
