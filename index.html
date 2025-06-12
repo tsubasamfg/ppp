@@ -2,18 +2,12 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ポスター掲示計算</title>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-size: 20px;
-            font-family: 'Open Sans', sans-serif;
-        }
-        input {
-            font-size: 20px;
-            font-family: 'Open Sans', sans-serif;
-        }
-        /* A2InputのNumber Input Spinnerを非表示にする */
+        /* Hide Number Input Spinner for A2Input */
         #A2Input::-webkit-outer-spin-button,
         #A2Input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -22,74 +16,121 @@
         #A2Input {
             -moz-appearance: textfield;
         }
-        #calculateButton {
-            background-color: blue;
-            color: white;
-            font-size: 20px;
-            padding: 10px 20px;
-            border: none;
-            cursor: pointer;
-            font-family: 'Open Sans', sans-serif;
-        }
-        h2 {
-            font-family: 'Open Sans', sans-serif;
-        }
-        p{
-            font-family: 'Open Sans', sans-serif;
-        }
-        span{
-            font-family: 'Open Sans', sans-serif;
+        /* Custom styles for responsiveness and appearance */
+        body {
+            font-family: 'Inter', sans-serif; /* Use Inter font for consistency with Tailwind */
         }
         .error-input {
-            background-color: red;
+            background-color: #fee2e2; /* Light red background for error */
+            border-color: #ef4444; /* Red border */
         }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
 
-    <h2>ポスター掲示計算</h2>
+    <div class="bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md md:max-w-lg lg:max-w-xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-center mb-6 text-gray-800">ポスター掲示計算</h2>
 
-    <p>壁の長さ（cm）: <input type="number" id="WallInput" value="300"></p>
-    <p>ポスターの数: <input type="number" id="PosterInput" value="5"></p>
-    <p>A2用紙の横幅（cm）: <input type="number" id="A2Input" value="42" readonly></p>
+        <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <label for="WallInput" class="text-gray-700 text-base sm:text-lg mb-1 sm:mb-0">壁の長さ（cm）:</label>
+                <input type="number" id="WallInput" value="300"
+                       class="mt-1 block w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-lg">
+            </div>
 
-    <button id="calculateButton">計算する</button>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <label for="PosterInput" class="text-gray-700 text-base sm:text-lg mb-1 sm:mb-0">ポスターの数:</label>
+                <input type="number" id="PosterInput" value="5"
+                       class="mt-1 block w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-lg">
+            </div>
 
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <label for="A2Input" class="text-gray-700 text-base sm:text-lg mb-1 sm:mb-0">A2用紙の横幅（cm）:</label>
+                <input type="number" id="A2Input" value="42" readonly
+                       class="mt-1 block w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 cursor-not-allowed sm:text-lg">
+            </div>
+        </div>
 
-    <p>ポスター間隔（最初に空ける距離）: <span id="result1"></span>cm</p>
-    <p>スパン（ポスター間隔+A2の横幅）: <span id="result2"></span>cm</p>
+        <button id="calculateButton"
+                class="w-full mt-8 py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out text-lg sm:text-xl">
+            計算する
+        </button>
+
+        <div class="mt-8 pt-6 border-t border-gray-200 space-y-4">
+            <p class="text-gray-700 text-base sm:text-lg">
+                ポスター間隔（最初に空ける距離）: <span id="result1" class="font-bold text-blue-600 text-lg sm:text-xl"></span>cm
+            </p>
+            <p class="text-gray-700 text-base sm:text-lg">
+                スパン（ポスター間隔+A2の横幅）: <span id="result2" class="font-bold text-blue-600 text-lg sm:text-xl"></span>cm
+            </p>
+            <p id="errorMessage" class="text-red-600 font-semibold text-center text-sm sm:text-base hidden">
+                有効な数値を入力してください。または、ポスターの数を見直してください。
+            </p>
+        </div>
+    </div>
 
     <script>
-        function rounddown(h3, h5, h22) {
-            const result = Math.floor((h3 - (h5 * h22)) / (h5 + 1));
+        /**
+         * Calculates the rounded down spacing between posters.
+         * @param {number} wallLength - The length of the wall in cm.
+         * @param {number} posterCount - The number of posters.
+         * @param {number} a2Width - The width of an A2 poster in cm.
+         * @returns {number} The calculated spacing, rounded down.
+         */
+        function calculateSpacing(wallLength, posterCount, a2Width) {
+            // Formula to calculate the spacing
+            const result = Math.floor((wallLength - (posterCount * a2Width)) / (posterCount + 1));
             return result;
         }
 
-        document.getElementById("calculateButton").addEventListener("click", function() {
-            const WallValue = parseFloat(document.getElementById("WallInput").value);
-            const PosterValue = parseFloat(document.getElementById("PosterInput").value);
-            const A2Value = parseFloat(document.getElementById("A2Input").value);
+        /**
+         * Updates the display with calculation results and handles error states.
+         */
+        function updateCalculationDisplay() {
+            const wallInput = document.getElementById("WallInput");
             const posterInput = document.getElementById("PosterInput");
+            const a2Input = document.getElementById("A2Input");
+            const result1Span = document.getElementById("result1");
+            const result2Span = document.getElementById("result2");
+            const errorMessageDiv = document.getElementById("errorMessage");
 
+            const wallValue = parseFloat(wallInput.value);
+            const posterValue = parseFloat(posterInput.value);
+            const a2Value = parseFloat(a2Input.value);
 
-             if (isNaN(WallValue) || isNaN(PosterValue) || isNaN(A2Value)) {
-                document.getElementById("result1").textContent = "有効な数値を入力してください。";
-                document.getElementById("result2").textContent = "有効な数値を入力してください。";
+            // Hide error message initially
+            errorMessageDiv.classList.add("hidden");
+            posterInput.classList.remove("error-input"); // Remove error highlighting from previous calculations
+
+            // Validate inputs
+            if (isNaN(wallValue) || isNaN(posterValue) || isNaN(a2Value) || wallValue < 0 || posterValue < 1 || a2Value < 0) {
+                result1Span.textContent = "N/A";
+                result2Span.textContent = "N/A";
+                errorMessageDiv.textContent = "有効な数値を入力してください。";
+                errorMessageDiv.classList.remove("hidden");
+                // Do not highlight poster input for general validation error
                 return;
             }
 
-            const result1 = rounddown(WallValue, PosterValue, A2Value);
-            const result2 = result1 + A2Value;
+            const spacing = calculateSpacing(wallValue, posterValue, a2Value);
+            const span = spacing + a2Value;
 
-            document.getElementById("result1").textContent = result1;
-            document.getElementById("result2").textContent = result2;
+            result1Span.textContent = spacing;
+            result2Span.textContent = span;
 
-            if (result1 <= 0) {
+            // Highlight poster input if spacing is non-positive
+            if (spacing <= 0) {
                 posterInput.classList.add("error-input");
-            } else {
-                posterInput.classList.remove("error-input");
+                errorMessageDiv.textContent = "ポスター間隔が確保できません。ポスターの数を減らすか、壁の長さを増やしてください。";
+                errorMessageDiv.classList.remove("hidden");
             }
-        });
+        }
+
+        // Event listener for the calculate button
+        document.getElementById("calculateButton").addEventListener("click", updateCalculationDisplay);
+
+        // Initial calculation on page load
+        window.onload = updateCalculationDisplay;
     </script>
 
 </body>
